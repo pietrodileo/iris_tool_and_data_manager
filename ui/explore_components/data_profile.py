@@ -71,7 +71,7 @@ def _render_download_button(profile: dict):
         data=json_str,
         file_name=filename,
         mime="application/json",
-        use_container_width=True,
+        width='stretch',
         help="Download all statistics as JSON file"
     )
 
@@ -147,7 +147,7 @@ def _render_numeric_columns_grid(df: pd.DataFrame, numeric_cols: dict):
                             nbins=30
                         )
                         fig.update_layout(height=250, showlegend=False)
-                        st.plotly_chart(fig, use_container_width=True)
+                        st.plotly_chart(fig, use_container_width=True, config={})
 
 def _render_categorical_columns_grid(df: pd.DataFrame, categorical_cols: dict):
     """Render categorical columns in a grid layout (4 per row)"""
@@ -200,4 +200,4 @@ def _render_categorical_columns_grid(df: pd.DataFrame, categorical_cols: dict):
                                 labels={'x': col_name, 'y': 'Count'}
                             )
                             fig.update_layout(height=250, showlegend=False)
-                            st.plotly_chart(fig, use_container_width=True)
+                            st.plotly_chart(fig, use_container_width=True, config={})

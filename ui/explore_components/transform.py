@@ -1,57 +1,50 @@
 # ui/explore_components/transform.py
 """
 Transform Component
-Data transformation operations
+Independent data transformation operations - each operation is fully isolated
 """
 
 import streamlit as st
 import pandas as pd
-from utils.data_analysis import (
-    aggregate_data, 
-    create_calculated_column, 
-    get_numeric_columns
-)
+from utils.data_analysis import aggregate_data
 
 def render_transform(df: pd.DataFrame):
-    """Render data transformation section"""
+    """Render data transformation section with fully independent operations"""
     
-    st.subheader("🔧 Data Transformation")
-    
-    # Get working dataframe (filtered or original)
-    working_df = st.session_state.get('transformed_data', df)
+    if df is None or df.empty:
+        st.warning("No data available for transformation")
+        return
     
     transform_type = st.selectbox(
         "Select transformation",
-        ["Group By & Aggregate", "Create Calculated Column", "Sort Data"],
-        help="Choose a transformation to apply to your data"
+        ["Group By & Aggregate"],
+        help="Choose a transformation"
     )
     
+    # Each transformation is completely independent
     if transform_type == "Group By & Aggregate":
-        _render_aggregate_transform(working_df)
-    elif transform_type == "Create Calculated Column":
-        _render_calculated_column_transform(working_df)
-    elif transform_type == "Sort Data":
-        _render_sort_transform(working_df)
+        _render_aggregate_independent(df)
+
+# ========== AGGREGATION ==========
+def _render_aggregate_independent(df: pd.DataFrame):
+    """
+    Independent aggregation operation
+    - Works on original df only
+    - Results stored in separate session key
+    - No dependencies on other operations
+    """
     
-    # Reset button
-    st.divider()
-    if st.button("🔄 Reset to Original Data", help="Clear all transformations and filters"):
-        st.session_state.transformed_data = None
-        st.success("✅ Data reset to original!")
-        st.rerun()
-
-def _render_aggregate_transform(df: pd.DataFrame):
-    """Render group by & aggregate transformation"""    
-    if df is None:
-        st.error("⚠️ Nessun dataframe disponibile (df è None in render_transform)")
-        return
-
     st.write("**Group By & Aggregate**")
-    st.caption("Group data by one or more columns and calculate aggregates")
+    st.caption("Create aggregated view without modifying original data")
+    
+    # Independent session state key
+    if 'aggregation_result' not in st.session_state:
+        st.session_state.aggregation_result = None
     
     group_cols = st.multiselect(
         "Group by columns", 
         df.columns.tolist(),
+        key="agg_group_cols",
         help="Select columns to group by"
     )
     
@@ -62,111 +55,109 @@ def _render_aggregate_transform(df: pd.DataFrame):
             agg_col = st.selectbox(
                 "Column to aggregate", 
                 df.columns.tolist(),
+                key="agg_target_col",
                 help="Select column to calculate aggregate on"
             )
         
         with col2:
             agg_func = st.selectbox(
                 "Aggregation function", 
-                ["sum", "mean", "count", "min", "max", "std"],
-                help="Select how to aggregate the data"
+                ["count", "sum", "mean", "min", "max", "std", "median"],
+                key="agg_function"
             )
         
-        if st.button("📊 Apply Aggregation", type="primary"):
-            try:
-                grouped = aggregate_data(df, group_cols, agg_col, agg_func)
-                st.session_state.transformed_data = grouped
-                st.success(f"✅ Aggregation applied! Grouped by {', '.join(group_cols)}")
-                st.dataframe(grouped, width='stretch')
-            except Exception as e:
-                st.error(f"❌ Error: {e}")
+        col_btn1, col_btn2 = st.columns([1, 1])
+        
+        with col_btn1:
+            if st.button("Calculate Aggregation", type="primary", width='stretch'):
+                try:
+                    # Work on a fresh copy - no dependencies
+                    aggregated_df = aggregate_data(df.copy(), group_cols, agg_col, agg_func)
+                    
+                    # Store in independent state
+                    st.session_state.aggregation_result = {
+                        'data': aggregated_df,
+                        'group_cols': group_cols,
+                        'agg_col': agg_col,
+                        'agg_func': agg_func
+                    }
+                    
+                    st.success(f"Aggregation calculated! Grouped by {', '.join(group_cols)}")
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        
+        with col_btn2:
+            if st.session_state.aggregation_result is not None:
+                if st.button("Clear Results", width='stretch'):
+                    st.session_state.aggregation_result = None
+                    st.success("Aggregation cleared")
+                    st.rerun()
+    
+    # Display results independently
+    if st.session_state.aggregation_result is not None:
+        st.divider()
+        st.subheader("Aggregation Results")
+        
+        agg_info = st.session_state.aggregation_result
+        
+        st.info(f"""
+        **Details:**
+        - Grouped by: {', '.join(agg_info['group_cols'])}
+        - Aggregated column: {agg_info['agg_col']}
+        - Function: {agg_info['agg_func']}
+        - Result rows: {len(agg_info['data'])}
+        """)
+        
+        st.dataframe(agg_info['data'], width='stretch', height=400)
+        
+        # Independent download
+        csv = agg_info['data'].to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="Download Results (CSV)",
+            data=csv,
+            file_name=f"aggregation_{agg_info['agg_func']}.csv",
+            mime="text/csv",
+            width='stretch'
+        )
+        
+        # Independent visualization
+        if st.checkbox("Visualize Results", key="viz_agg"):
+            _visualize_aggregation_independent(agg_info['data'], agg_info['group_cols'])
 
-def _render_calculated_column_transform(df: pd.DataFrame):
-    """Render create calculated column transformation"""
+def _visualize_aggregation_independent(agg_df: pd.DataFrame, group_cols: list):
+    """Independent visualization for aggregated data"""
+    import plotly.express as px
     
-    st.write("**Create Calculated Column**")
-    st.caption("Create a new column based on mathematical operations between two columns")
-    
-    new_col_name = st.text_input(
-        "New column name", 
-        "calculated_column",
-        help="Name for the new calculated column"
+    chart_type = st.selectbox(
+        "Chart type",
+        ["Bar Chart", "Line Chart", "Pie Chart"],
+        key="agg_chart_type"
     )
     
-    numeric_cols = get_numeric_columns(df)
-    
-    if len(numeric_cols) >= 2:
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            col_a = st.selectbox(
-                "First column", 
-                numeric_cols, 
-                key="calc_col1"
-            )
-        
-        with col2:
-            operation = st.selectbox(
-                "Operation", 
-                ["+", "-", "*", "/"],
-                format_func=lambda x: {
-                    "+": "➕ Add",
-                    "-": "➖ Subtract",
-                    "*": "✖️ Multiply",
-                    "/": "➗ Divide"
-                }[x]
-            )
-        
-        with col3:
-            col_b = st.selectbox(
-                "Second column", 
-                numeric_cols, 
-                key="calc_col2"
-            )
-        
-        st.caption(f"Formula: `{new_col_name} = {col_a} {operation} {col_b}`")
-        
-        if st.button("➕ Create Column", type="primary"):
-            try:
-                new_df = create_calculated_column(df, new_col_name, col_a, operation, col_b)
-                st.session_state.transformed_data = new_df
-                st.success(f"✅ Column '{new_col_name}' created!")
-                st.dataframe(new_df[[col_a, col_b, new_col_name]].head(10), width='stretch')
-            except Exception as e:
-                st.error(f"❌ Error: {e}")
-    else:
-        st.warning("⚠️ Need at least 2 numeric columns for calculations")
+    try:
+        if len(group_cols) == 1:
+            x_col = group_cols[0]
+            y_col = agg_df.columns[-1]
+            
+            if chart_type == "Bar Chart":
+                fig = px.bar(agg_df, x=x_col, y=y_col, title=f"{y_col} by {x_col}")
+            elif chart_type == "Line Chart":
+                fig = px.line(agg_df, x=x_col, y=y_col, title=f"{y_col} by {x_col}", markers=True)
+            elif chart_type == "Pie Chart":
+                fig = px.pie(agg_df, names=x_col, values=y_col, title=f"{y_col} distribution")
+            
+            st.plotly_chart(fig, use_container_width=True, config={})
 
-def _render_sort_transform(df: pd.DataFrame):
-    """Render sort data transformation"""
-    if df is None:
-        st.error("⚠️ Nessun dataframe disponibile (df è None in render_transform)")
-        return
+        else:
+            x_col = group_cols[0]
+            color_col = group_cols[1]
+            y_col = agg_df.columns[-1]
+            
+            fig = px.bar(agg_df, x=x_col, y=y_col, color=color_col, barmode='group')
+            st.plotly_chart(fig, use_container_width=True, config={})
 
-    st.write("**Sort Data**")
-    st.caption("Sort the data by one or more columns")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        sort_cols = st.multiselect(
-            "Sort by columns", 
-            df.columns.tolist(),
-            help="Select one or more columns to sort by"
-        )
-    
-    with col2:
-        ascending = st.checkbox(
-            "Ascending order", 
-            value=True,
-            help="Check for ascending, uncheck for descending"
-        )
-    
-    if sort_cols and st.button("🔽 Apply Sort", type="primary"):
-        try:
-            sorted_df = df.sort_values(by=sort_cols, ascending=ascending)
-            st.session_state.transformed_data = sorted_df
-            st.success(f"✅ Data sorted by {', '.join(sort_cols)} ({'ascending' if ascending else 'descending'})")
-            st.dataframe(sorted_df.head(10), width='stretch')
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
+            
+    except Exception as e:
+        st.error(f"Visualization error: {e}")

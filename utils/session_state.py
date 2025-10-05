@@ -30,6 +30,9 @@ def initialize_session_state(config: AppConfig):
         "filters": {},
         "transformed_data": None,
         
+        # transformation results
+        "aggregation_result": None,
+
         # UI state
         "active_tab": 0,
         
@@ -46,15 +49,21 @@ def reset_table_data():
     st.session_state.table_data = None
     st.session_state.filters = {}
     st.session_state.transformed_data = None
+    st.session_state.aggregation_result = None
 
 def reset_connection_data():
     """Reset all data when disconnecting"""
     st.session_state.table_data = None
     st.session_state.filters = {}
     st.session_state.transformed_data = None
+    st.session_state.aggregation_result = None
     st.session_state.df = None
     st.session_state.schema_input = "(none)"
     st.session_state.selected_table = "(none)"
+
+def clear_all_transformations():
+    """Clear all independent transformation results"""
+    st.session_state.aggregation_result = None
 
 def set_session_value(key: str, value: Any):
     """Set a session state value"""
@@ -63,3 +72,36 @@ def set_session_value(key: str, value: Any):
 def get_session_value(key: str, default: Any = None) -> Any:
     """Get a session state value with optional default"""
     return st.session_state.get(key, default)
+
+def get_working_dataframe() -> Any:
+    """
+    Get the current working dataframe based on priority:
+    1. Transformed data (if exists)
+    2. Filtered table data (if exists)
+    3. Original table data
+    
+    Note: This does NOT include aggregation results as they are isolated
+    """
+    if st.session_state.get('transformed_data') is not None:
+        return st.session_state.transformed_data
+    
+    return st.session_state.get('table_data')
+
+def has_aggregation_result() -> bool:
+    """Check if there's an active aggregation result"""
+    return st.session_state.get('aggregation_result') is not None
+
+def get_aggregation_result() -> dict:
+    """
+    Get the isolated aggregation result
+    
+    Returns:
+        dict with keys: 'data', 'group_cols', 'agg_col', 'agg_func'
+        or None if no aggregation exists
+    """
+    return st.session_state.get('aggregation_result')
+
+def clear_all_analysis():
+    """Clear all analysis results (filters, transformations, and aggregations)"""
+    st.session_state.filters = {}
+    st.session_state.aggregation_result = None

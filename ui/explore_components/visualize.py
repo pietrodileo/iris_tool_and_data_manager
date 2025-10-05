@@ -58,7 +58,7 @@ def _render_integrated_filters(df: pd.DataFrame):
         with col1:
             st.info(f"🔍 **Active Filters**: Showing {filtered_count:,} of {total_count:,} rows ({filtered_pct:.1f}%)")
         with col2:
-            if st.button("🗑️ Clear Filters", use_container_width=True, key="clear_filters_viz"):
+            if st.button("🗑️ Clear Filters", width='stretch', key="clear_filters_viz"):
                 _reset_all_filters(df)
                 st.session_state.transformed_data = None
                 st.rerun()
@@ -266,7 +266,7 @@ def _render_chart_section(viz_data: pd.DataFrame):
     
     if fig:
         fig.update_layout(height=600)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config={})
 
 def _create_chart(df, chart_type, numeric_cols, all_cols, color_by):
     """Create chart based on selected type"""

@@ -136,7 +136,7 @@ def _render_analysis_sections():
     analysis_tabs = st.tabs([
         "📋 Data View", 
         "📊 Data Profile", 
-        "🔧 Transform", 
+        "🔧 Aggregate Data", 
         "📈 Visualize",
         "🤖 Text to SQL"
     ])
