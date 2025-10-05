@@ -381,13 +381,17 @@ Comprehensive data exploration and analysis:
 
 **c) Filtering & Visualization**
 
-- Apply filters on multiple columns (text, numeric, date)
-- Export filtered results as CSV
+- Apply numerical or categorical filters on multiple columns (text, numeric, date)
 - Create visualizations:
   - Bar charts for categorical data
   - Line charts for time series
   - Scatter plots for correlations
   - Histograms for distributions
+  - Box plots for detecting outliers
+  - Pie charts for proportions
+  - Heatmaps for correlations or matrices
+ 
+[iris_data_manager_filter_and_visualization.webm](https://github.com/user-attachments/assets/9ba6ee26-7f4d-44bd-8791-080d879c8757)
 
 **d) Aggregations**
 
