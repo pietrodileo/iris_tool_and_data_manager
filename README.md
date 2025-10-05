@@ -359,17 +359,20 @@ You can try the app using the examples provided in the `./examples` folder.
 
 Comprehensive data exploration and analysis:
 
-**a) Table Selection**
+**a) Table Selection and Data Viewing**
 
 - Browse available schemas
 - Select tables from dropdown
-- View table metadata (row count, columns, indexes)
+- Download table as XLSX, CSV or JSON
 
-**b) Data Viewing**
+[iris_data_manager_visualize.webm](https://github.com/user-attachments/assets/098c7ee4-42d0-47d9-ad67-fe0fe92861a1)
 
-- Paginated table display
-- Column type information
-- Row count statistics
+**b) Data Profile**
+
+- Show table information and download statistics
+- Show statistics and distribution for numerical and categorical columns
+
+[iris_data_manager_data_profile.webm](https://github.com/user-attachments/assets/3544859e-524f-448f-bda1-a7ef5013736f)
 
 **c) Filtering & Visualization**
 
