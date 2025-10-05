@@ -397,7 +397,9 @@ Comprehensive data exploration and analysis:
 
 - Group by single or multiple columns
 - Apply aggregate functions (COUNT, SUM, AVG, MIN, MAX)
-- Visualize aggregated results
+- Visualize and download aggregated results and plot
+  
+[iris_data_manager_aggregate.webm](https://github.com/user-attachments/assets/0d623ea0-9045-436c-ae8e-cc2ff977b774)
 
 **e) Text-to-SQL**
 
@@ -405,5 +407,7 @@ Comprehensive data exploration and analysis:
 - AI-powered SQL generation
 - Execute generated queries
 - View and download results
+
+[iris_data_manager_text_to_sql.webm](https://github.com/user-attachments/assets/a75e9dd7-4b99-4728-ae04-00011d462b91)
 
 </details>
