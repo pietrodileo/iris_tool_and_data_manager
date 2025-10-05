@@ -381,19 +381,25 @@ Comprehensive data exploration and analysis:
 
 **c) Filtering & Visualization**
 
-- Apply filters on multiple columns (text, numeric, date)
-- Export filtered results as CSV
+- Apply numerical or categorical filters on multiple columns (text, numeric, date)
 - Create visualizations:
   - Bar charts for categorical data
   - Line charts for time series
   - Scatter plots for correlations
   - Histograms for distributions
+  - Box plots for detecting outliers
+  - Pie charts for proportions
+  - Heatmaps for correlations or matrices
+ 
+[iris_data_manager_filter_and_visualization.webm](https://github.com/user-attachments/assets/9ba6ee26-7f4d-44bd-8791-080d879c8757)
 
 **d) Aggregations**
 
 - Group by single or multiple columns
 - Apply aggregate functions (COUNT, SUM, AVG, MIN, MAX)
-- Visualize aggregated results
+- Visualize and download aggregated results and plot
+  
+[iris_data_manager_aggregate.webm](https://github.com/user-attachments/assets/0d623ea0-9045-436c-ae8e-cc2ff977b774)
 
 **e) Text-to-SQL**
 
@@ -401,5 +407,7 @@ Comprehensive data exploration and analysis:
 - AI-powered SQL generation
 - Execute generated queries
 - View and download results
+
+[iris_data_manager_text_to_sql.webm](https://github.com/user-attachments/assets/a75e9dd7-4b99-4728-ae04-00011d462b91)
 
 </details>
