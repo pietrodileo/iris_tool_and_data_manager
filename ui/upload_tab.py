@@ -13,8 +13,8 @@ def render_upload_tab(iris: IRIStool):
     """Render the upload data tab"""
     
     uploaded_file = st.file_uploader(
-        "Upload a file (CSV, Excel, JSON or TXT)",
-        type=["csv", "xlsx", "xls", "json", "txt"]
+        "Upload a file (CSV, Excel (XLSX) or JSON )",
+        type=["csv", "xlsx", "xls", "json"]
     )
 
     if uploaded_file is not None:

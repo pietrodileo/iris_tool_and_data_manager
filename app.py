@@ -9,7 +9,6 @@ import logging
 from utils.session_state import initialize_session_state
 from ui.connection_sidebar import render_connection_sidebar
 from ui.upload_tab import render_upload_tab
-from ui.create_table_tab import render_create_table_tab
 from ui.explore_tab import render_explore_tab
 from config.settings import AppConfig
 
@@ -44,7 +43,7 @@ if st.session_state.iris_connection is None:
     st.stop()
 
 # ---------- Create Tabs (only if connected) ----------
-tab_names = ["📤 Upload Data", "🛠️ Create Table", "🔍 Explore & Analyze"]
+tab_names = ["📤 Upload Data", "🔍 Explore & Analyze"]
 tabs = st.tabs(tab_names)
 
 # ---------- Render Tabs ----------
@@ -52,7 +51,4 @@ with tabs[0]:
     render_upload_tab(st.session_state.iris_connection)
 
 with tabs[1]:
-    render_create_table_tab(st.session_state.iris_connection)
-
-with tabs[2]:
     render_explore_tab(st.session_state.iris_connection)

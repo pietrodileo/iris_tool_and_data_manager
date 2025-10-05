@@ -33,7 +33,7 @@ def render_sql_generation():
     
     with col2:
         st.write("") 
-        available_models = ['gemma3:1b','gemma2:2b']
+        available_models = ['gemma3:1b','gemma2:2b','gemma3:4b']
         selected_model = st.selectbox(
             "Model",
             options=available_models,
