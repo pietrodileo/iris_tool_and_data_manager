@@ -4,10 +4,15 @@ A comprehensive Python toolkit for integrating pandas DataFrames with InterSyste
 
 ## Overview
 
-This project demonstrates seamless integration between InterSystems IRIS and the Python data science ecosystem. It consists of two main components:
+This proof of concept (POC) demonstrates how InterSystems IRIS can be integrated with pandas and plotly Python libraries via the Python SDK (IRIS Native).
 
-1. **IRIStool**: A Python module providing a high-level API for IRIS database operations
+It consists of two main components:
+
+1. **IRIStool**: A Python module which takes advantage of pandas to perform IRIS database operations
 2. **IRIS Data Manager**: A Streamlit web application for visual data management and analysis
+
+<details>
+<summary><b>Installation</b></summary>
 
 ## Installation
 
@@ -22,45 +27,83 @@ This project demonstrates seamless integration between InterSystems IRIS and the
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/iris_tool_and_data_manager.git
+git clone https://github.com/pietrodileo/iris_tool_and_data_manager.git
 cd iris_tool_and_data_manager
 ```
 
 2. **Create and activate virtual environment**
 
+I like to us `uv` package manager, but you can use whatever:
+
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+uv venv
+.\.venv\Scripts\activate
 ```
 
 3. **Install dependencies**
 
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
-4. **Start InterSystems IRIS with Docker**
+4. **Set up environment variables**
+Edit `.env` file with your configuration:
 
 ```bash
-docker-compose up -d
+IRIS_HOST=your_iris_host
+IRIS_PORT=your_iris_port  
+IRIS_NAMESPACE=your_namespace
+IRIS_USER=your_username
+IRIS_PASSWORD=your_password
+OLLAMA_API_URL=your_ollama_api_url
 ```
 
-5. **Configure environment variables**
+Feel free to use the default configuration:
 
-Create a `.env` file in the project root:
-
-```env
+```bash
 IRIS_HOST=127.0.0.1
-IRIS_PORT=1972
+IRIS_PORT=9091
 IRIS_NAMESPACE=USER
 IRIS_USER=_SYSTEM
 IRIS_PASSWORD=SYS
+OLLAMA_API_URL=http://localhost:11424/api/chat
 ```
 
-6. **Run the application**
+5. **Start InterSystems IRIS with Docker**
+
+Open Docker Desktop and run the following instruction:
 
 ```bash
-streamlit run app.py
+docker-compose up -d --build
+```
+
+This will pull two images:
+
+* ollama/ollama:latest
+* intersystems/iris-community:latest-cd
+
+Ollama image will install three models by default:
+
+* gemma2:2b
+* gemma3:4b
+* gemma3:1b 
+
+You can choose which models to pull by the `ollama_entrypoint.sh` file.
+
+6. **Run the application or quickstart.py**
+
+`quickstart.py` provides an example of how **IRISTool** module can be used to create tables and views from pandas dataframe. Run it by the instruction:
+
+```bash
+uv run quickstart.py
+```
+
+The Management Portal of the containerized instace can be accessed at `http://localhost:9092/csp/sys/UtilHome.csp`
+
+**IRIS Data Manager UI** provides a complete interface to import, visualize and manage data and can be run via the instruction:
+
+```bash
+uv run streamlit run app.py
 ```
 
 The application will open in your browser at `http://localhost:8501`
@@ -75,80 +118,26 @@ The `IRIStool` class provides a pandas-friendly interface to InterSystems IRIS d
 - View creation and management
 - Schema exploration
 
+</details>
+
+<details>
+<summary><b>Quick Start Example</b></summary>
+
 ### Quick Start Example
 
-```python
-import pandas as pd
-from utils.iristool import IRIStool
+This quickstart example demonstrates how to use the IRIStool Python utility to interact with an InterSystems IRIS database using a familiar and Pythonic interface.
+It shows how to:
 
-# Initialize connection
-with IRIStool(
-    host="127.0.0.1",
-    port=1972,
-    namespace="USER",
-    username="_SYSTEM",
-    password="SYS"
-) as iris:
-    
-    # Create sample DataFrame
-    df = pd.DataFrame({
-        "ID": [1, 2, 3],
-        "Name": ["Alice", "Bob", "Charlie"],
-        "Age": [30, 25, 35],
-        "City": ["New York", "London", "Paris"]
-    })
-    
-    # Convert DataFrame to IRIS table
-    iris.df_to_table(
-        df=df,
-        table_name="Employees",
-        table_schema="Company",
-        primary_key="ID",
-        exist_ok=True,
-        drop_if_exists=True,
-        indices=[
-            {"column": "Age", "type": "index"},
-            {"column": "Name", "type": "unique"}
-        ]
-    )
-    
-    # Query data back
-    result = iris.fetch("SELECT * FROM Company.Employees WHERE Age > ?", [28])
-    print(result)
-    
-    # Insert new records
-    iris.insert_many(
-        table_name="Employees",
-        table_schema="Company",
-        rows=[
-            {"ID": 4, "Name": "Diana", "Age": 28, "City": "Rome"},
-            {"ID": 5, "Name": "Ethan", "Age": 32, "City": "Tokyo"}
-        ]
-    )
-    
-    # Update records
-    iris.update(
-        table_name="Employees",
-        table_schema="Company",
-        new_values={"City": "San Francisco"},
-        filters={"ID": 1}
-    )
-    
-    # Create a view
-    iris.create_view(
-        view_name="AvgAgeByCity",
-        view_schema="Company",
-        sql="SELECT City, AVG(Age) as AvgAge FROM Company.Employees GROUP BY City"
-    )
-    
-    # Explore namespace
-    tables = iris.show_namespace_tables(table_schema="Company")
-    print(tables)
-```
+* Establish a connection using environment variables
+* Create tables and insert data
+* Execute SQL queries and retrieve data as Pandas DataFrames
+* Automatically infer IRIS data types from a DataFrame
+* Convert a DataFrame to an IRIS table
+* Update, query, and create SQL views dynamically
 
 ### Key Features
 
-**Automatic Type Inference**: The module intelligently maps pandas dtypes to IRIS SQL types:
+**Automatic Type Inference**: The module intelligently maps pandas dtypes to IRIS SQL types, making table creation seamless and reducing manual schema work:
 
 - Integer types → INT/BIGINT
 - Float types → DOUBLE
@@ -156,9 +145,57 @@ with IRIStool(
 - Strings → VARCHAR/CLOB (based on length)
 - Boolean → BIT
 
-**Vector Search Support**: Create HNSW indexes for similarity search:
+**Creating Tables**:
+Easily create or update IRIS tables using Python dictionaries that define column names, data types, and constraints:
 
 ```python
+iris.create_table(
+    "Employee",
+    columns={
+        "ID": "INT",
+        "Name": "VARCHAR(100)",
+        "Age": "INT",
+        "Department": "VARCHAR(50)"
+    },
+    constraints=["PRIMARY KEY (ID)"],
+    check_exists=True
+)
+```
+
+**Convert To and From DataFrames**:
+
+Seamlessly move data between IRIS and pandas
+
+```python
+# Convert a pandas DataFrame into an IRIS table
+iris.df_to_table(
+    df=musicians,
+    table_name="Musicians",
+    table_schema="Jazz",
+    primary_key="ID",
+    drop_if_exists=True
+)
+
+# Fetch SQL query results directly into a pandas DataFrame
+df = iris.fetch("SELECT * FROM Jazz.Musicians WHERE Genre = ?", ["Hard Bop"])
+print(df.head())
+```
+
+Type mapping, primary keys, and indices can all be automatically inferred from the DataFrame.
+
+**Creating Indices (with Vector Search Support)**: 
+
+Define and manage multiple types of indices, including traditional B-Tree and HNSW (Hierarchical Navigable Small World) for vector similarity search:
+
+```python
+# Standard index
+iris.create_index(
+    table_name="Musicians",
+    column_name="Genre",
+    index_type="index"
+)
+
+# Vector search index
 iris.create_hnsw_index(
     table_name="Documents",
     column_name="Embedding",
@@ -171,16 +208,126 @@ iris.create_hnsw_index(
 
 **Context Manager Support**: Automatic connection cleanup:
 
+All operations can be run safely inside a Python with block — ensuring automatic connection cleanup:
+
 ```python
-with IRIStool() as iris:
-    # Your operations here
-    pass
-# Connection automatically closed
+with IRIStool(host, port, namespace, username, password) as iris:
+    iris.create_table(...)
+    iris.insert_many(...)
+# Connection automatically closed on exit
 ```
+
+### Run the example
+
+```bash
+uv run quickstart.py
+```
+
+Expected output is:
+
+``` bash
+IRIS connection [_SYSTEM@127.0.0.1:9091/USER]
+Employee table found! Dropping table...
+table SQLUser.Employee dropped successfully.
+Table SQLUser.Employee created successfully.
+Inserting data...
+3 row(s) added into SQLUser.Employee.
+Retrieving data of employees with age greater than 28...
+   ID   Name  Age Department
+0   1  Alice   29         IT
+1   2    Bob   34         HR
+Describing dataframe:
+             ID        Age
+count  2.000000   2.000000
+mean   1.500000  31.500000
+std    0.707107   3.535534
+min    1.000000  29.000000
+25%    1.250000  30.250000
+50%    1.500000  31.500000
+75%    1.750000  32.750000
+max    2.000000  34.000000
+Retrieving table information...
+Columns:
+[{'TABLE_SCHEMA': 'SQLUser', 'TABLE_NAME': 'Employee', 'COLUMN_NAME': 'ID', 'DATA_TYPE': 'integer', 'CHARACTER_MAXIMUM_LENGTH': None, 'IS_NULLABLE': 'NO', 'AUTO_INCREMENT': 'NO', 'UNIQUE_COLUMN': 'YES', 'PRIMARY_KEY': 'YES', 'odbctype': 4}, {'TABLE_SCHEMA': 'SQLUser', 'TABLE_NAME': 'Employee', 'COLUMN_NAME': 'Name', 'DATA_TYPE': 'varchar', 'CHARACTER_MAXIMUM_LENGTH': 100, 'IS_NULLABLE': 'YES', 'AUTO_INCREMENT': 'NO', 'UNIQUE_COLUMN': 'NO', 'PRIMARY_KEY': 'NO', 'odbctype': 12}, {'TABLE_SCHEMA': 'SQLUser', 'TABLE_NAME': 'Employee', 'COLUMN_NAME': 'Age', 'DATA_TYPE': 'integer', 'CHARACTER_MAXIMUM_LENGTH': None, 'IS_NULLABLE': 'YES', 'AUTO_INCREMENT': 'NO', 'UNIQUE_COLUMN': 'NO', 'PRIMARY_KEY': 'NO', 'odbctype': 4}, {'TABLE_SCHEMA': 'SQLUser', 'TABLE_NAME': 'Employee', 'COLUMN_NAME': 'Department', 'DATA_TYPE': 'varchar', 'CHARACTER_MAXIMUM_LENGTH': 50, 'IS_NULLABLE': 'YES', 'AUTO_INCREMENT': 'NO', 'UNIQUE_COLUMN': 'NO', 'PRIMARY_KEY': 'NO', 'odbctype': 12}]
+Indices:
+[{'INDEX_NAME': 'EMPLOYEEPKey1', 'COLUMN_NAME': 'ID', 'PRIMARY_KEY': 1, 'NON_UNIQUE': 0}]
+Musicians dataframe:
+   ID First Name   Last Name        DOB                           City       Instrument      Genre  Age
+0   1        Pat     Metheny 1954-08-12    Lee's Summit, Missouri, USA           Guitar  Jazz Rock   71
+1   2        Bob    Reynolds 1963-12-03    Morristown, New Jersey, USA        Saxophone  Jazz Funk   61
+2   3    Charlie       Haden 1937-08-06          Shenandoah, Iowa, USA      Double Bass       Jazz   76
+3   4    Charlie      Parker 1920-08-29       Kansas City, Kansas, USA   Alto Saxophone      Bebop   34
+4   5       John    Coltrane 1926-09-23    Hamlet, North Carolina, USA  Tenor Saxophone   Hard Bop   40
+5   6       Eric     Johnson 1974-08-17             Austin, Texas, USA           Guitar       Rock   51
+6   7        Wes  Montgomery 1923-03-06     Indianapolis, Indiana, USA           Guitar   Hard Bop   45
+7   8       Paul    Chambers 1935-04-22  Pittsburgh, Pennsylvania, USA      Double Bass   Hard Bop   33
+8   9       Bill       Evans 1929-08-16    Plainfield, New Jersey, USA            Piano       Jazz   51
+Inferring types...
+{'ID': 'INT', 'First_Name': 'VARCHAR(255)', 'Last_Name': 'VARCHAR(255)', 'DOB': 'DATE', 'City': 'VARCHAR(255)', 'Instrument': 'VARCHAR(255)', 'Genre': 'VARCHAR(255)', 'Age': 'INT'}
+Converting DataFrame to IRIS table...
+Table Jazz.Musicians already exists.
+table Jazz.Musicians dropped successfully.
+Table Jazz.Musicians created successfully.
+Index Musicians_Last_Name_index created successfully on Jazz.Musicians(Last_Name).
+Index Musicians_Genre_index created successfully on Jazz.Musicians(Genre).
+Index Musicians_Instrument_index created successfully on Jazz.Musicians(Instrument).
+Inserted 9 rows into Musicians
+Bop artists:
+  First_Name   Last_Name       Instrument     Genre
+0    Charlie      Parker   Alto Saxophone     Bebop
+1       John    Coltrane  Tenor Saxophone  Hard Bop
+2        Wes  Montgomery           Guitar  Hard Bop
+3       Paul    Chambers      Double Bass  Hard Bop
+Inserting new musicians...
+2 row(s) added into Jazz.Musicians.
+Updating a record...
+Updated 1 row(s) in Jazz.Musicians.
+View Jazz.AvgAgeByGenre created.
+2 row(s) added into Jazz.Musicians.
+Updating a record...
+Updated 1 row(s) in Jazz.Musicians.
+2 row(s) added into Jazz.Musicians.
+Updating a record...
+Updated 1 row(s) in Jazz.Musicians.
+Updating a record...
+Updated 1 row(s) in Jazz.Musicians.
+Updated 1 row(s) in Jazz.Musicians.
+View Jazz.AvgAgeByGenre created.
+                             Genre                AvgAge
+View Jazz.AvgAgeByGenre created.
+                             Genre                AvgAge
+0                            BEBOP                    34
+0                            BEBOP                    34
+1                 BEBOP / HARD BOP                    58
+1                 BEBOP / HARD BOP                    58
+2  COOL JAZZ / MODAL JAZZ / FUSION                    65
+3                         HARD BOP  39.33333333333333333
+4                             JAZZ  63.50000000000000000
+5                        JAZZ FUNK                    61
+6         JAZZ FUSION / WORLD JAZZ                    71
+7                             ROCK                    51
+```
+
+Created tables and view are available in the Management Portal SQL as well:
+![table1](pic/iristool_1.png "table1")
+![table2](pic/iristool_2.png "table2")
+![table3](pic/iristool_3.png "table3")
+![table4](pic/iristool_4.png "table4")
+
+</details>
+
+<details>
+<summary><b>IRIS Data Manager UI</b></summary>
 
 ## IRIS Data Manager UI
 
 The Streamlit-based interface provides a visual way to interact with your IRIS database without writing code.
+
+Run the UI with the instruction:
+
+```python
+uv run streamlit run .\app.py
+```
 
 ### Features
 
@@ -263,3 +410,5 @@ Comprehensive data exploration and analysis:
 - **Vector Search**: Build semantic search applications with HNSW indexes
 - **Data Exploration**: Visual interface for non-technical users
 - **ETL Workflows**: Transform and load data into IRIS
+
+</details>

@@ -258,7 +258,8 @@ class IRIStool:
         try:
             with self.conn.cursor() as cursor:
                 columns = rows[0].keys()
-                col_str = ", ".join(columns)
+                col_str = ",".join(columns)
+                col_str = col_str.replace(" ", "_")
                 placeholders = ", ".join(["?"] * len(columns))
                 sql = f"INSERT INTO {full_table} ({col_str}) VALUES ({placeholders})"
                 values = [tuple(row[col] for col in columns) for row in rows]
@@ -378,7 +379,7 @@ class IRIStool:
                 set_clause = ", ".join([f"{col} = ?" for col in new_values.keys()])
                 set_values = list(new_values.values())
                 # WHERE clause
-                where_clause = " AND ".join([f"{col} = ?" for col in filters.keys()])
+                where_clause = " AND ".join([f"{col.replace(' ', '_')} = ?" for col in filters.keys()])
                 where_values = list(filters.values())
                 sql = f"UPDATE {full_table} SET {set_clause} WHERE {where_clause}"
                 cursor.execute(sql, set_values + where_values)
