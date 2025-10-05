@@ -345,10 +345,7 @@ Upload and import data from various formats:
 
 - **Supported formats**: CSV, Excel (XLSX/XLS), JSON
 - **Pre-import preview**: View data before saving
-- **Data transformation**: 
-  - Rename columns
-  - Change data types
-  - Handle missing values
+- **View data before importing them**
 - **Schema configuration**:
   - Specify table name and schema
   - Define primary key
