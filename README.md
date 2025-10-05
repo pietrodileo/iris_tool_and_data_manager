@@ -329,6 +329,14 @@ Run the UI with the instruction:
 uv run streamlit run .\app.py
 ```
 
+### Usage Workflow
+
+1. **Connect**: Configure and test database connection in sidebar
+2. **Upload**: Import data files or create tables manually
+3. **Explore**: Browse existing tables and examine structure
+4. **Analyze**: Apply filters, create visualizations, run aggregations
+5. **Query**: Use natural language or SQL to extract insights
+
 ### Features
 
 #### 1. Connection Management (Sidebar)
@@ -396,22 +404,5 @@ Comprehensive data exploration and analysis:
 - AI-powered SQL generation
 - Execute generated queries
 - View and download results
-
-### Usage Workflow
-
-1. **Connect**: Configure and test database connection in sidebar
-2. **Upload**: Import data files or create tables manually
-3. **Explore**: Browse existing tables and examine structure
-4. **Analyze**: Apply filters, create visualizations, run aggregations
-5. **Query**: Use natural language or SQL to extract insights
-
-## Use Cases
-
-- **Data Migration**: Easily move data between pandas and IRIS
-- **Prototyping**: Quickly test data models before production
-- **Analytics**: Combine pandas processing with IRIS storage
-- **Vector Search**: Build semantic search applications with HNSW indexes
-- **Data Exploration**: Visual interface for non-technical users
-- **ETL Workflows**: Transform and load data into IRIS
 
 </details>
