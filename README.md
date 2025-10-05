@@ -336,16 +336,16 @@ uv run streamlit run .\app.py
 - Configure connection parameters (host, port, namespace, credentials)
 - Test connection with real-time feedback
 - Default values loaded from `.env` file
-- Connection status indicator
+
+[iris_data_manager_connect.webm](https://github.com/user-attachments/assets/9e8593ca-dd4f-4bd3-a540-bbd048ce4427)
 
 #### 2. Upload Data Tab
 
 Upload and import data from various formats:
 
-- **Supported formats**: CSV, Excel (XLSX/XLS), JSON, Parquet
+- **Supported formats**: CSV, Excel (XLSX/XLS), JSON
 - **Pre-import preview**: View data before saving
 - **Data transformation**: 
-
   - Rename columns
   - Change data types
   - Handle missing values
@@ -353,7 +353,10 @@ Upload and import data from various formats:
   - Specify table name and schema
   - Define primary key
   - Create indexes (standard, unique, HNSW for vectors)
-- **Conflict resolution**: Choose to append or replace existing tables
+
+You can try the app using the examples provided in the `./examples` folder.
+
+[iris_data_manager_import_data.webm](https://github.com/user-attachments/assets/baebcb7a-8cd2-4934-a52d-a06caff30a31)
 
 #### 3. Explore & Analyze Tab
 
