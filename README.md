@@ -336,8 +336,8 @@ uv run streamlit run .\app.py
 - Configure connection parameters (host, port, namespace, credentials)
 - Test connection with real-time feedback
 - Default values loaded from `.env` file
-
-[iris_data_manager_connect.webm](https://github.com/user-attachments/assets/9e8593ca-dd4f-4bd3-a540-bbd048ce4427)
+  
+[iris_data_manager_connect.webm](https://github.com/user-attachments/assets/74a75134-64c8-4ed1-b53f-72f14fbd2e6f)
 
 #### 2. Upload Data Tab
 
@@ -353,7 +353,7 @@ Upload and import data from various formats:
 
 You can try the app using the examples provided in the `./examples` folder.
 
-[iris_data_manager_import_data.webm](https://github.com/user-attachments/assets/baebcb7a-8cd2-4934-a52d-a06caff30a31)
+[iris_data_manager_import_data.webm](https://github.com/user-attachments/assets/34414378-2812-4585-aa4f-f1df8d86d332)
 
 #### 3. Explore & Analyze Tab
 
