@@ -92,23 +92,27 @@ You can choose which models to pull by the `ollama_entrypoint.sh` file.
 
 6. **Run the application or quickstart.py**
 
-`quickstart.py` provides an example of how **IRISTool** module can be used to create tables and views from pandas dataframe. Run it by the instruction:
+  * `quickstart.py` provides an example of how **IRISTool** module can be used to create tables and views from pandas dataframe. Run it by the instruction:
 
-```bash
-uv run quickstart.py
-```
+  ```bash
+  uv run quickstart.py
+  ```
+  The Management Portal of the containerized instace can be accessed at `http://localhost:9092/csp/sys/UtilHome.csp`
 
-The Management Portal of the containerized instace can be accessed at `http://localhost:9092/csp/sys/UtilHome.csp`
+  * **IRIS Data Manager UI** provides a complete interface to import, visualize and manage data and can be run via the instruction:
 
-**IRIS Data Manager UI** provides a complete interface to import, visualize and manage data and can be run via the instruction:
-
-```bash
-uv run streamlit run app.py
-```
+  ```bash
+  uv run streamlit run app.py
+  ```
 
 The application will open in your browser at `http://localhost:8501`
 
-## IRIStool Module
+</details>
+
+<details>
+<summary><b>Quick Start Example with the IRIStool Module</b></summary>
+
+### Quick Start Example with the IRIStool Module
 
 The `IRIStool` class provides a pandas-friendly interface to InterSystems IRIS databases with support for:
 
@@ -117,13 +121,6 @@ The `IRIStool` class provides a pandas-friendly interface to InterSystems IRIS d
 - Index management (standard, HNSW vector indexes)
 - View creation and management
 - Schema exploration
-
-</details>
-
-<details>
-<summary><b>Quick Start Example</b></summary>
-
-### Quick Start Example
 
 This quickstart example demonstrates how to use the IRIStool Python utility to interact with an InterSystems IRIS database using a familiar and Pythonic interface.
 It shows how to:
