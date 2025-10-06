@@ -104,6 +104,7 @@ def quickstart():
             primary_key="ID",
             exist_ok=True,
             drop_if_exists=True,
+            drop_related_views=True,
             indices=[
                 {"column": "Last Name", "type": "index"},
                 {"column": "Genre", "type": "index"},
@@ -159,7 +160,9 @@ def quickstart():
         iris.create_view(
             view_name="AvgAgeByGenre",
             view_schema="Jazz",
-            sql="SELECT Genre, AVG(Age) AS AvgAge FROM Jazz.Musicians GROUP BY Genre"
+            sql="SELECT Genre, AVG(Age) AS AvgAge FROM Jazz.Musicians GROUP BY Genre",
+            exist_ok=True,
+            drop_if_exists=True
         )
 
         view = iris.fetch("SELECT * FROM Jazz.AvgAgeByGenre")

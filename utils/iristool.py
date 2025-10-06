@@ -914,7 +914,7 @@ class IRIStool:
             print(f"Index {index_name} already exists")
         
     # ---------- Views ----------
-    def create_view(self, view_name: str, sql: str, view_schema: str = "SQLUser") -> None:
+    def create_view(self, view_name: str, sql: str, view_schema: str = "SQLUser", exist_ok: bool = False, drop_if_exists: bool = False) -> None:
         """
         Create a view in the database.
 
@@ -922,6 +922,8 @@ class IRIStool:
             view_name (str): The name of the view to create.
             sql (str): The SQL statement that defines the view.
             view_schema (str, optional): The schema of the view. Defaults to "SQLUser".
+            exist_ok (bool, optional): If True, don't raise an error if the view already exists. Defaults to False.
+            drop_if_exists (bool, optional): If True, drop the view if it already exists. Defaults to False.
 
         Returns:
             None
@@ -930,6 +932,20 @@ class IRIStool:
             conn.create_view("my_view", "SELECT * FROM my_table", "EnsLib_Background_Workflow")
         """
         full_name = self.validate_table_name(view_name, view_schema)
+        print(f"Creating view {full_name}...")
+        print(exist_ok, drop_if_exists)
+        if exist_ok == True:
+            if self.table_exists(view_name, view_schema):
+                print(f"View {full_name} already exists. ccc.")
+                if drop_if_exists == True:
+                    self.drop_table(view_name, view_schema, view_or_table="view")
+                else:
+                    print(f"View {full_name} already exists. Skipping creation.")
+                    return
+        elif exist_ok == False:
+            if self.table_exists(view_name, view_schema):
+                raise ValueError(f"View {full_name} already exists.")
+        
         cursor = self.conn.cursor()
         try:
             cursor.execute(f"CREATE VIEW {full_name} AS {sql}")

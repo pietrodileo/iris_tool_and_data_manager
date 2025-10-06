@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Start from the official InterSystems IRIS Community Edition image
 # ------------------------------------------------------------------------------
-FROM intersystems/iris-community:latest-cd
+FROM intersystemsdc/irishealth-community:latest
 
 # ------------------------------------------------------------------------------
 # Define environment variables (reusable everywhere)
