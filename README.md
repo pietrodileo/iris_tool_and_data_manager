@@ -85,10 +85,24 @@ This will pull two images:
 Ollama image will install three models by default:
 
 * gemma2:2b
-* gemma3:4b
-* gemma3:1b 
+* gemma3:1b
 
-You can choose which models to pull by the `ollama_entrypoint.sh` file.
+You can choose which models to pull modifying the `ollama_entrypoint.sh` file.
+
+Please wait until all the models have been downloaded (approximately 2.5 GB data).
+To check download status enter the command:
+
+```bash
+docker exec ollama_iristool ollama list
+```
+
+Expected output is:
+
+```bash
+NAME         ID              SIZE      MODIFIED
+gemma3:1b    8648f39daa8f    815 MB    About a minute ago
+gemma2:2b    8ccf136fdd52    1.6 GB    About a minute ago
+```
 
 6. **Run the application or quickstart.py**
 
@@ -97,7 +111,7 @@ You can choose which models to pull by the `ollama_entrypoint.sh` file.
   ```bash
   uv run quickstart.py
   ```
-  The Management Portal of the containerized instace can be accessed at `http://localhost:9092/csp/sys/UtilHome.csp`
+  The Management Portal of the containerized instace can be accessed at `http://localhost:9092/csp/sys/UtilHome.csp` (username and password specified in .env file will be used, default are user:"_SYSTEM" and pw:"SYS").
 
   * **IRIS Data Manager UI** provides a complete interface to import, visualize and manage data and can be run via the instruction:
 

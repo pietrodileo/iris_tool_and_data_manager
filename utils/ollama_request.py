@@ -1,6 +1,12 @@
 import requests
 import json
 
+actions = {
+    "get_response": "chat",
+    "get_stream": "chat",
+    "get_models": "tags"
+}
+
 class OllamaRequest:
     def __init__(self, api_url:str):
         self.api_url = api_url
@@ -33,7 +39,7 @@ class OllamaRequest:
             payload["format"] = format
 
         # Send HTTP request to the ollama API
-        response = requests.post(self.api_url, json=payload, stream=False)
+        response = requests.post(self.api_url+"/"+actions["get_response"], json=payload, stream=False)
 
         if response.status_code != 200:
             raise Exception(f"Ollama error {response.status_code}: {response.text}")
@@ -84,3 +90,18 @@ class OllamaRequest:
                         yield f"Error decoding JSON: {e}. \nFailed to parse line: {line}"
         else:
             yield f"Error: {response.status_code} - {response.text}"
+            
+    def __repr__(self) -> str:
+        return f"OllamaRequest(api_url={self.api_url})"
+            
+    def get_models(self) -> list[str]:
+        response = requests.get(self.api_url+"/"+actions["get_models"])
+        if response.status_code == 200:
+            json = response.json()
+            models = json['models']
+            models_list = []
+            for model in models:
+                models_list.append(model["name"])
+            return models_list
+        else:
+            raise Exception(f"Error getting models: {response.status_code} - {response.text}")

@@ -9,6 +9,24 @@ import pandas as pd
 import plotly.express as px
 import json
 from utils.data_analysis import generate_data_profile
+from datetime import datetime, date
+from decimal import Decimal
+from uuid import UUID
+
+def convert_keys_to_str(obj):
+    """Recursively convert dict keys to strings and values to JSON-safe."""
+    if isinstance(obj, dict):
+        return {str(k): convert_keys_to_str(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_keys_to_str(v) for v in obj]
+    elif isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    elif isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, UUID):
+        return str(obj)
+    else:
+        return obj
 
 def render_data_profile(df: pd.DataFrame):
     """Render data profiling section"""
@@ -61,7 +79,8 @@ def _render_download_button(profile: dict):
     profile_json = _prepare_profile_for_json(profile)
     
     # Create JSON string
-    json_str = json.dumps(profile_json, indent=2, default=str)
+    serializable_profile = convert_keys_to_str(profile_json)
+    json_str = json.dumps(serializable_profile, indent=2)
     
     filename = f"{st.session_state.schema_input}.{st.session_state.selected_table}_data_profile_stats.json"
 

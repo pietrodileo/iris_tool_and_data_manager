@@ -18,6 +18,8 @@ def render_sql_generation():
     
     llm = OllamaRequest(st.session_state["ollama_api_url"])
     
+    models = llm.get_models()
+    
     st.markdown("### 💬 Ask Your Question")
     st.caption("Convert your questions into SQL queries using AI")
 
@@ -34,7 +36,7 @@ def render_sql_generation():
     
     with col2:
         st.write("") 
-        available_models = ['gemma3:1b','gemma2:2b','gemma3:4b']
+        available_models = models
         selected_model = st.selectbox(
             "Model",
             options=available_models,
