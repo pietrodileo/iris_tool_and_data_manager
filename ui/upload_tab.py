@@ -39,6 +39,8 @@ def _process_uploaded_file(uploaded_file):
         else:
             st.error("Unsupported file format.")
             st.session_state.df = None
+        # remove spaces from column names and replace them with underscores
+        st.session_state.df.columns = st.session_state.df.columns.str.replace(' ', '_')
     except Exception as e:
         st.error(f"Error while reading file: {e}")
         st.session_state.df = None
@@ -47,11 +49,13 @@ def _render_preview_section():
     """Render data preview and editing section"""
     with st.expander("📋 Preview and Modify Data", expanded=True):
         st.subheader("Modify data before saving")
-        st.session_state.df = st.data_editor(
-            st.session_state.df, 
-            width='stretch', 
-            num_rows="dynamic"
-        )
+        # insert a checkbox to show data (if available) to not necessarily load huge tables
+        if st.session_state.df is not None and st.checkbox("Show data", value=False, key="show_data"):
+            st.session_state.df = st.data_editor(
+                st.session_state.df, 
+                width='stretch', 
+                num_rows="dynamic"
+            )
 
 def _render_indices_section():
     """Render index configuration section"""
@@ -125,7 +129,9 @@ def _render_save_section(iris: IRIStool):
             options=["(none)"] + list(st.session_state.df.columns)
         )
         pk_col = None if pk_col == "(none)" else pk_col
-
+        if pk_col:
+            pk_col = pk_col.replace(" ", "_")
+    
     drop_existing = st.checkbox("Overwrite existing table", value=False)
 
     if st.button("💾 Save to Database", type="primary"):
@@ -148,17 +154,25 @@ def _save_to_database(
     try:
         indices = st.session_state.get('indices', [])
         
-        iris.df_to_table(
-            st.session_state.df,
-            table_name=table_name,
-            table_schema=schema_name,
-            primary_key=pk_col,
-            exist_ok=drop_existing,
-            drop_if_exists=drop_existing,
-            indices=indices
-        )
+        # if a primary column is selected, verify that it does not contain NaN
+        if pk_col is not None and st.session_state.df[pk_col].isna().any():
+            raise ValueError(f"Primary key column '{pk_col}' contains NaN values.")
         
-        st.success(f"✅ Successfully saved {len(st.session_state.df)} rows to {schema_name}.{table_name}")
+        # if a primary column is selected, verify it contains unique values
+        if pk_col is not None and st.session_state.df[pk_col].duplicated().any():
+            raise ValueError(f"Primary key column '{pk_col}' contains duplicate values.")
+        
+        with st.spinner("Saving data..."):
+            iris.df_to_table(
+                st.session_state.df,
+                table_name=table_name,
+                table_schema=schema_name,
+                primary_key=pk_col,
+                exist_ok=drop_existing,
+                drop_if_exists=drop_existing,
+                indices=indices
+            )
+            st.success(f"✅ Successfully saved {len(st.session_state.df)} rows to {schema_name}.{table_name}")
         
     except Exception as e:
         st.error(f"❌ Error while saving: {e}")

@@ -1,15 +1,16 @@
 # ui/explore_components/transform.py
 """
 Transform Component
-Independent data transformation operations - each operation is fully isolated
+Handles data transformation operations
 """
 
 import streamlit as st
 import pandas as pd
 from utils.data_analysis import aggregate_data
+import plotly.express as px
 
 def render_transform(df: pd.DataFrame):
-    """Render data transformation section with fully independent operations"""
+    """Render data transformation section"""
     
     if df is None or df.empty:
         st.warning("No data available for transformation")
@@ -21,14 +22,13 @@ def render_transform(df: pd.DataFrame):
         help="Choose a transformation"
     )
     
-    # Each transformation is completely independent
     if transform_type == "Group By & Aggregate":
-        _render_aggregate_independent(df)
+        _render_aggregate(df)
 
 # ========== AGGREGATION ==========
-def _render_aggregate_independent(df: pd.DataFrame):
+def _render_aggregate(df: pd.DataFrame):
     """
-    Independent aggregation operation
+     aggregation operation
     - Works on original df only
     - Results stored in separate session key
     - No dependencies on other operations
@@ -37,7 +37,6 @@ def _render_aggregate_independent(df: pd.DataFrame):
     st.write("**Group By & Aggregate**")
     st.caption("Create aggregated view without modifying original data")
     
-    # Independent session state key
     if 'aggregation_result' not in st.session_state:
         st.session_state.aggregation_result = None
     
@@ -71,10 +70,8 @@ def _render_aggregate_independent(df: pd.DataFrame):
         with col_btn1:
             if st.button("Calculate Aggregation", type="primary", width='stretch'):
                 try:
-                    # Work on a fresh copy - no dependencies
+                    st.session_state["show_agg_viz"] = False
                     aggregated_df = aggregate_data(df.copy(), group_cols, agg_col, agg_func)
-                    
-                    # Store in independent state
                     st.session_state.aggregation_result = {
                         'data': aggregated_df,
                         'group_cols': group_cols,
@@ -95,7 +92,6 @@ def _render_aggregate_independent(df: pd.DataFrame):
                     st.success("Aggregation cleared")
                     st.rerun()
     
-    # Display results independently
     if st.session_state.aggregation_result is not None:
         st.divider()
         st.subheader("Aggregation Results")
@@ -112,7 +108,7 @@ def _render_aggregate_independent(df: pd.DataFrame):
         
         st.dataframe(agg_info['data'], width='stretch', height=400)
         
-        # Independent download
+        #  download
         csv = agg_info['data'].to_csv(index=False).encode('utf-8')
         st.download_button(
             label="Download Results (CSV)",
@@ -122,42 +118,61 @@ def _render_aggregate_independent(df: pd.DataFrame):
             width='stretch'
         )
         
-        # Independent visualization
-        if st.checkbox("Visualize Results", key="viz_agg"):
-            _visualize_aggregation_independent(agg_info['data'], agg_info['group_cols'])
+        # Checkbox instead of button - stays active
+        show_viz = st.checkbox("Show Visualization", key="show_agg_viz")
+        
+        if show_viz:
+            chart_type = st.selectbox(
+                "Chart type",
+                ["Bar Chart", "Line Chart", "Pie Chart","Box Plot"],
+                key="agg_chart_type"
+            )
+            # Now visualization updates automatically when chart_type changes
+            _visualize_aggregation(agg_info['data'], agg_info['group_cols'], chart_type)
 
-def _visualize_aggregation_independent(agg_df: pd.DataFrame, group_cols: list):
-    """Independent visualization for aggregated data"""
-    import plotly.express as px
-    
-    chart_type = st.selectbox(
-        "Chart type",
-        ["Bar Chart", "Line Chart", "Pie Chart"],
-        key="agg_chart_type"
-    )
-    
+def _visualize_aggregation(agg_df: pd.DataFrame, group_cols: list, chart_type: str):
+    """Visualization for aggregated data."""
     try:
+        x_col = group_cols[0]
+        y_col = agg_df.columns[-1]
+
         if len(group_cols) == 1:
-            x_col = group_cols[0]
-            y_col = agg_df.columns[-1]
-            
+            # One grouping column
             if chart_type == "Bar Chart":
                 fig = px.bar(agg_df, x=x_col, y=y_col, title=f"{y_col} by {x_col}")
             elif chart_type == "Line Chart":
                 fig = px.line(agg_df, x=x_col, y=y_col, title=f"{y_col} by {x_col}", markers=True)
             elif chart_type == "Pie Chart":
                 fig = px.pie(agg_df, names=x_col, values=y_col, title=f"{y_col} distribution")
-            
-            st.plotly_chart(fig, use_container_width=True, config={})
+            elif chart_type == "Box Plot":
+                fig = px.box(agg_df, x=x_col, y=y_col, title=f"{y_col} distribution by {x_col}")
+            else:
+                st.warning("Unsupported chart type for single grouping.")
+                return
 
         else:
-            x_col = group_cols[0]
+            # Two or more grouping columns
             color_col = group_cols[1]
-            y_col = agg_df.columns[-1]
-            
-            fig = px.bar(agg_df, x=x_col, y=y_col, color=color_col, barmode='group')
-            st.plotly_chart(fig, use_container_width=True, config={})
 
-            
+            if chart_type == "Bar Chart":
+                fig = px.bar(agg_df, x=x_col, y=y_col, color=color_col, barmode='group',
+                             title=f"{y_col} by {x_col} and {color_col}")
+            elif chart_type == "Line Chart":
+                fig = px.line(agg_df, x=x_col, y=y_col, color=color_col, markers=True,
+                              title=f"{y_col} by {x_col} and {color_col}")
+            elif chart_type == "Pie Chart":
+                # Aggregate by color_col for pie
+                pie_df = agg_df.groupby(color_col)[y_col].sum().reset_index()
+                fig = px.pie(pie_df, names=color_col, values=y_col,
+                             title=f"{y_col} distribution by {color_col}")
+            elif chart_type == "Box Plot":
+                fig = px.box(agg_df, x=x_col, y=y_col, color=color_col,
+                             title=f"{y_col} distribution by {x_col} and {color_col}")
+            else:
+                st.warning("Unsupported chart type for multiple groupings.")
+                return
+
+        st.plotly_chart(fig, use_container_width=True, config={})
+
     except Exception as e:
         st.error(f"Visualization error: {e}")

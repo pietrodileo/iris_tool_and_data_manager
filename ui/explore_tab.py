@@ -95,7 +95,7 @@ def _render_load_data_section(iris: IRIStool, schema: str, table: str):
         num_rows = st.number_input(
             "Number of rows to load",
             min_value=1,
-            max_value=10000,
+            max_value=1000000,
             value=st.session_state.explorer_num_rows,
             key="explorer_num_rows",
             help="Maximum number of rows to load from the table"
