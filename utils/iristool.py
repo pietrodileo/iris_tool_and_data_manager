@@ -186,7 +186,7 @@ class IRIStool:
             Exception: If there is an error executing the query.
             
         Example: 
-            df = conn.query("SELECT * FROM my_table WHERE id = ? AND name = ?", parameters=[1, "test"])
+            df = conn.fetch("SELECT * FROM my_table WHERE id = ? AND name = ?", parameters=[1, "test"])
         """
         try:         
             with self.conn.cursor() as cursor:
@@ -215,7 +215,7 @@ class IRIStool:
             table_schema (str): Schema (default SQLUser)
 
         Example:
-            conn.insert("ExportResponse", {"col1": "value1", "col2": 123}, "EnsLib_Background_Workflow")
+            conn.insert_row("ExportResponse", {"col1": "value1", "col2": 123}, "EnsLib_Background_Workflow")
         """
         # Validate table
         full_name = self.validate_table_name(table_name, table_schema)
@@ -514,6 +514,60 @@ class IRIStool:
             print(f"Error describing table: {e}")
             raise
 
+    def get_reference_from_this_table(self, table_name: str, table_schema: str = "SQLUser"):
+        """
+        Get all the foreign key references from this table.
+
+        Args:
+            table_name (str): The name of the table to get references from.
+            table_schema (str, optional): The schema of the table to get references from. Defaults to "SQLUser".
+
+        Returns:
+            DataFrame: A DataFrame containing the reference information.
+        """
+        sql = """
+        SELECT
+            c.CONSTRAINT_NAME as constraint_name,
+            c.UNIQUE_CONSTRAINT_TABLE as referenced_table,
+            c.UNIQUE_CONSTRAINT_SCHEMA as referenced_schema,
+            k.TABLE_SCHEMA as table_schema,
+            k.TABLE_NAME as table_name,
+            k.COLUMN_NAME as column_name,
+            k.REFERENCED_COLUMN_NAME as referenced_column_name
+        FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS c
+        JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS k
+            ON c.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+        WHERE k.TABLE_SCHEMA = ? AND k.TABLE_NAME = ?
+        """
+        return self.fetch(sql, [table_schema, table_name])
+
+    def get_reference_to_this_table(self, table_name: str, table_schema: str = "SQLUser"):
+        """
+        Get all the foreign key references to this table.
+
+        Args:
+            table_name (str): The name of the table to get references to.
+            table_schema (str, optional): The schema of the table to get references to. Defaults to "SQLUser".
+
+        Returns:
+            DataFrame: A DataFrame containing the reference information.
+        """
+        sql = """
+        SELECT
+            c.CONSTRAINT_NAME as constraint_name,
+            c.UNIQUE_CONSTRAINT_TABLE as referenced_table,
+            c.UNIQUE_CONSTRAINT_SCHEMA as referenced_schema,
+            k.TABLE_SCHEMA as table_schema,
+            k.TABLE_NAME as table_name,
+            k.COLUMN_NAME as column_name,
+            k.REFERENCED_COLUMN_NAME as referenced_column_name
+        FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS c
+        JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS k
+            ON c.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+        WHERE c.UNIQUE_CONSTRAINT_SCHEMA = ? AND c.UNIQUE_CONSTRAINT_TABLE = ?
+        """
+        return self.fetch(sql, [table_schema, table_name])
+
     def get_row_id(self, table_name: str, column_name: str, value: str, table_schema: str = "SQLUser") -> int:
         """
         Retrieve the row ID from a table given a column name and value.
@@ -575,6 +629,7 @@ class IRIStool:
                 table_schema: str = "SQLUser", 
                 column_types: dict[str, str] | None = None, 
                 primary_key: str | None = None,
+                constraints: list[str] | None = None,
                 exist_ok: bool = False,
                 drop_if_exists: bool = False,
                 drop_related_views: bool = False,
@@ -588,6 +643,7 @@ class IRIStool:
             table_name (str): The name of the table to create.
             column_types (dict[str, str], optional): A dictionary of column name to data type pairs. Defaults to None. If None, all columns will be VARCHAR(255).
             primary_key (str, optional): The name of the primary key column. Defaults to None.
+            constraints (list[str], optional): A list of constraints to apply to the table. Defaults to None.
             exist_ok (bool, optional): If True, check if the table already exists and skip creation or drop it if it does. Defaults to False.
             drop_if_exists (bool, optional): If True and if exist_ok is True, drop the table if it already exists. Defaults to False.
             drop_related_views (bool, optional): If True, drop related views if they exist. Defaults to False.
@@ -602,6 +658,9 @@ class IRIStool:
                 table_name=table_name, 
                 table_schema=table_schema,
                 primary_key="ID",
+                constraints=[
+                    "FOREIGN KEY(patient_id) REFERENCES Test.Patient(patient_row_id)"
+                ],                
                 exist_ok=True,
                 drop_if_exists=True,
                 drop_related_views=True,
@@ -625,12 +684,19 @@ class IRIStool:
         if column_types is None: 
             column_types = self.infer_iris_types(df)
             
+        # Collect constraints
+        all_constraints = []
+        if primary_key:
+            all_constraints.append(f"PRIMARY KEY ({primary_key})")
+        if constraints:
+            all_constraints.extend(constraints)
+        
         # create table            
         self.create_table(
             table_name=table_name, 
             table_schema=table_schema,
             columns=column_types, 
-            constraints=[f"PRIMARY KEY ({primary_key})"] if primary_key else None
+            constraints=all_constraints       
         ) 
         
         # add indices
